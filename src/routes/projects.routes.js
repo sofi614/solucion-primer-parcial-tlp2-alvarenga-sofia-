@@ -26,7 +26,7 @@ projectRoutes.post(
   authMiddleware,
   createProjectValidation,
   validator,
-  createProject,
+  createProject
 );
 
 // ? Listar todos los proyectos: solo administrator.
@@ -42,7 +42,7 @@ projectRoutes.put(
   leaderMiddleware,
   updateProjectValidation,
   validator,
-  updateProject,
+  updateProject
 );
 
 // ? Eliminar un proyecto: solo su líder.
@@ -50,5 +50,6 @@ projectRoutes.delete(
   "/projects/:id",
   authMiddleware,
   leaderMiddleware,
-  deleteProject,
+  deleteProject
 );
+

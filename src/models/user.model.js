@@ -15,9 +15,7 @@ export const UserModel = sequelize.define(
     },
   },
   // TODO: 1. Activar la eliminación lógica (paranoid) en las opciones del modelo.
-
-  {paranoid : true , timestamps: true}
-
+  { paranoid: true }
 );
 
 

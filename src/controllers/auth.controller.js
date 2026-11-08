@@ -7,28 +7,28 @@ import { use } from "react";
 
 export const register = async (req, res) => {
   try {
-    const { username, email, password, role, profile } = matchedData(req, {
-      locations: ["body"],
-    });
+    const { username, email, password, role, profile } = req.body;
+
     // TODO: 1. Hashear la password antes de guardarla (hashPassword).
-    const passwordHash = await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
+
     // TODO: 2. Crear el user y su profile asociado.
     const user = await UserModel.create({
       username,
       email,
-      password: passwordHash,
+      password: hashedPassword,
       role,
     });
-    await ProfileModel.create({
-      ...profile,
-      user_id: user.id,
-    });
-    // TODO: 3. Responder con código 201, un mensaje de éxito y devolver el usuario sin la password.
+    await ProfileModel.create({ ...profile, user_id: user.id });
 
-    return res.status(201).json({
-      menssage: "el usuaria se ha creado correctamente",
-      data: { username, email, role },
+    // TODO: 3. Responder con código 201, un mensaje de éxito y devolver el usuario sin la password.
+    const createdUser = await UserModel.findByPk(user.id, {
+      attributes: { exclude: ["password"] },
+      include: [{ model: ProfileModel, as: "profile" }],
     });
+    return res
+      .status(201)
+      .json({ msg: "Usuario registrado con éxito", data: createdUser });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Error interno del servidor" });
@@ -37,41 +37,32 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = matchedData(req);
+    const { email, password } = req.body;
 
     // TODO: 1. Buscar el user por email y comparar la password (comparePassword).
-    const existingUser = await UserModel.findOne({ where: { email } });
-    if (!existingUser) {
-      return res.status(401).json({ message: "credencial invalida" });
-    }
-    const contraseñaValida = await comparePassword(
-      password,
-      existingUser.password,
-    );
-    if (!contraseñaValida) {
-      return res.status(401).json({ message: "credencial invalida" });
-    }
-    // TODO: 2. Firmar un JWT con el id y el role del user (signToken).
-    const token = signToken({user_id: existingUser.id , role: existingUser.role});
-    // TODO: 3. Guardar el token en una cookie httpOnly llamada "token", responder con código 200 y un mensaje de éxito.
-    res.cookie("token" , token , {
-      httpOnly: true, 
-      maxAge: 1000 
-    })
+    const user = await UserModel.findOne({ where: { email } });
     // ? Considerar qué mensaje devolver ante credenciales inválidas.
-    return res.status(401).json({ message: "login exitoso" })
-    console.log(email, password);
+    if (!user || !(await comparePassword(password, user.password))) {
+      return res.status(401).json({ msg: "Credenciales inválidas" });
+    }
+
+    // TODO: 2. Firmar un JWT con el id y el role del user (signToken).
+    const token = signToken({ id: user.id, role: user.role });
+
+    // TODO: 3. Guardar el token en una cookie httpOnly llamada "token", responder con código 200 y un mensaje de éxito.
+    res.cookie("token", token, { httpOnly: true });
+    return res.status(200).json({ msg: "Inicio de sesión exitoso" });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Error interno del servidor" });
   }
 };
 
-export const logout = async (req, res) => {
+export const logout = async (_req, res) => {
   try {
+    // TODO: 1. Eliminar la cookie "token" y responder con código 204 sin devolver ningun mensaje.
     res.clearCookie("token");
     return res.status(204).send();
-    // TODO: 1. Eliminar la cookie "token" y responder con código 204 sin devolver ningun mensaje.
   } catch (error) {
     console.log(error);
     return res.status(500).json({ msg: "Error interno del servidor" });

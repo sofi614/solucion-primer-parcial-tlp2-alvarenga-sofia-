@@ -9,13 +9,14 @@ import {
 } from "../middlewares/validations/auth.validation.js";
 
 export const authRoutes = Router();
+
 // TODO: 1. Decidir y aplicar los middlewares que correspondan a cada ruta.
 
 // ? Registro de usuario: acceso público.
-authRoutes.post("/auth/register",registerValidation, validator , register);
+authRoutes.post("/auth/register", registerValidation, validator, register);
 
 // ? Inicio de sesión: acceso público.
-authRoutes.post("/auth/login", loginValidation , validator, login);
+authRoutes.post("/auth/login", loginValidation, validator, login);
 
 // ? Cierre de sesión: requiere sesión iniciada.
-au
+authRoutes.post("/auth/logout", authMiddleware, logout);
